@@ -3,12 +3,18 @@ import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'app/routes/app_pages.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/services.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details); 
+    Clipboard.setData(ClipboardData(text: details.toString()));
+  };
+
   await Supabase.initialize(
-    url: 'https://danlcemiapskvymvohah.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRhbmxjZW1pYXBza3Z5bXZvaGFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMwMDEwOTUsImV4cCI6MjA3ODU3NzA5NX0.JuXJq_Qcth2A8SlttjQxRHsK39uOXhwkXs0hbdxxmws',
+    url: 'https://zpayorelnjoucbryorka.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwYXlvcmVsbmpvdWNicnlvcmthIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQzOTMxNjAsImV4cCI6MjA5OTk2OTE2MH0.1v_o7_ZJVoH6lJWX_1ZQDxUkc8OpRXZz8QZVzcwDlkA',
   );
   runApp(MyApp());
 }

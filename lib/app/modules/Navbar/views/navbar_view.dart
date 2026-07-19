@@ -31,7 +31,7 @@ class NavbarView extends StatelessWidget {
       case 0:
         return HomeView();
       case 1:
-        return const HistoryView();
+        return HistoryView();
       case 2:
         return ProfileView();
       default:

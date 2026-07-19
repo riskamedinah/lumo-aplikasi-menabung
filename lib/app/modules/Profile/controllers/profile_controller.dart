@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -16,6 +17,7 @@ class ProfileController extends GetxController {
   final isUploading = false.obs;
   final isUpdating = false.obs;
   final isDeleting = false.obs;
+  final isChangingPassword = false.obs;
 
   @override
   void onInit() {
@@ -32,15 +34,37 @@ class ProfileController extends GetxController {
       print('👤 Current user: ${user?.id}');
 
       if (user != null) {
-        final response =
-            await supabase.from('profiles').select().eq('id', user.id).single();
-
-        print('📊 Profile data from DB: $response');
-
-        username.value = response['username'] ?? '';
-        phone.value = response['phone'] ?? '';
         email.value = user.email ?? '';
-        avatarUrl.value = response['avatar_url'] ?? '';
+
+        try {
+          final response = await supabase
+              .from('profiles')
+              .select('username, phone, avatar_url')
+              .eq('id', user.id)
+              .single();
+
+          print('📊 Profile data from DB: $response');
+
+          username.value =
+              response['username']?.toString() ??
+              user.userMetadata?['username']?.toString() ??
+              user.userMetadata?['nama']?.toString() ??
+              'User';
+          phone.value = response['phone']?.toString() ?? '';
+          avatarUrl.value = response['avatar_url']?.toString() ?? '';
+        } catch (e) {
+          print('⚠️ Error fetching profile from DB, using metadata: $e');
+          username.value =
+              user.userMetadata?['username']?.toString() ??
+              user.userMetadata?['nama']?.toString() ??
+              'User';
+          phone.value = '';
+          avatarUrl.value = '';
+        }
+
+        if (avatarUrl.value.isEmpty) {
+          await loadProfilePicture(user.id);
+        }
 
         print(
           '✅ Profile loaded - Username: ${username.value}, Email: ${email.value}',
@@ -50,6 +74,26 @@ class ProfileController extends GetxController {
       print('❌ Error loading profile: $e');
     } finally {
       isLoading.value = false;
+    }
+  }
+
+  Future<void> loadProfilePicture(String userId) async {
+    try {
+      final response = await supabase.storage.from('profile_pictures').list(
+        path: userId,
+      );
+
+      if (response.isNotEmpty) {
+        final String publicUrl = supabase.storage
+            .from('profile_pictures')
+            .getPublicUrl('$userId/profile.jpg');
+        avatarUrl.value = '$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}';
+      } else {
+        avatarUrl.value = '';
+      }
+    } catch (e) {
+      print('📸 Error loading profile picture: $e');
+      avatarUrl.value = '';
     }
   }
 
@@ -71,11 +115,101 @@ class ProfileController extends GetxController {
       // Update observable values
       if (username != null) this.username.value = username;
       if (phone != null) this.phone.value = phone;
-
     } catch (e) {
       Get.snackbar('Error', 'Failed to update profile: $e');
     } finally {
       isUpdating.value = false;
+    }
+  }
+
+  Future<bool> verifyCurrentPassword(String currentPassword) async {
+    isChangingPassword.value = true;
+
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null || user.email == null || user.email!.isEmpty) {
+        throw Exception('User not logged in');
+      }
+
+      final trimmedPassword = currentPassword.trim();
+      if (trimmedPassword.isEmpty) {
+        throw Exception('Password lama harus diisi');
+      }
+
+      final response = await supabase.auth.signInWithPassword(
+        email: user.email!,
+        password: trimmedPassword,
+      );
+
+      if (response.user == null) {
+        throw Exception('Password lama tidak valid');
+      }
+
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        e.toString().replaceFirst('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(20),
+        duration: const Duration(seconds: 2),
+      );
+      return false;
+    } finally {
+      isChangingPassword.value = false;
+    }
+  }
+
+  Future<bool> changePassword(String newPassword) async {
+    isChangingPassword.value = true;
+
+    try {
+      final user = supabase.auth.currentUser;
+      if (user == null) throw Exception('User not logged in');
+
+      final trimmedPassword = newPassword.trim();
+      if (trimmedPassword.length < 6) {
+        throw Exception('Password minimal 6 karakter');
+      }
+
+      final hasLetter = RegExp(r'[A-Za-z]').hasMatch(trimmedPassword);
+      final hasDigit = RegExp(r'\d').hasMatch(trimmedPassword);
+      if (!hasLetter || !hasDigit) {
+        throw Exception('Password harus berisi huruf dan angka');
+      }
+
+      await supabase.auth.updateUser(
+        UserAttributes(password: trimmedPassword),
+      );
+
+      Get.snackbar(
+        'Berhasil',
+        'Password berhasil diubah',
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: const Color(0xFF009F61),
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(20),
+        duration: const Duration(seconds: 2),
+      );
+      return true;
+    } catch (e) {
+      Get.snackbar(
+        'Gagal',
+        e.toString().replaceFirst('Exception: ', ''),
+        snackPosition: SnackPosition.BOTTOM,
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+        borderRadius: 12,
+        margin: const EdgeInsets.all(20),
+        duration: const Duration(seconds: 2),
+      );
+      return false;
+    } finally {
+      isChangingPassword.value = false;
     }
   }
 

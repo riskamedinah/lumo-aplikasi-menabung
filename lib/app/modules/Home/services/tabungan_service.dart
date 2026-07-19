@@ -36,7 +36,7 @@ class TabunganService {
     });
   }
 
-  // TAMBAHKAN METHOD INI: Update tabungan
+  // Update tabungan
   Future<void> updateTabungan(Tabungan tabungan) async {
     await _supabase
         .from('tabungan')
@@ -52,12 +52,11 @@ class TabunganService {
         .eq('id', tabungan.id);
   }
 
-  // TAMBAHKAN METHOD INI: Tambah setoran (update total terkumpul)
+  // Tambah setoran - DESKRIPSI DIHAPUS (tidak digunakan di database)
   Future<void> tambahSetoran(
     String tabunganId,
     double jumlah,
     double totalBaru,
-    String deskripsi,
   ) async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not logged in');
@@ -94,17 +93,15 @@ class TabunganService {
 
   // Delete gambar tabungan
   Future<void> deleteTabunganImage(String imageUrl) async {
-    // Extract file path dari URL
     final fileName = imageUrl.split('/').last;
     await _supabase.storage.from('tabungan_images').remove([fileName]);
   }
 
-  // TAMBAHKAN METHOD INI: Get tabungan by ID
+  // Get tabungan by ID
   Future<Tabungan?> getTabunganById(String id) async {
     try {
       final response =
           await _supabase.from('tabungan').select().eq('id', id).single();
-
       return Tabungan.fromMap(response);
     } catch (e) {
       print('Error getting tabungan by ID: $e');

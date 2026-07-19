@@ -120,11 +120,34 @@ class HomeView extends StatelessWidget {
                       ),
                       child: Material(
                         color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            // TODO: Filter by name
+                        child: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'name_asc') {
+                              _tabunganController.updateSortMode(
+                                TabunganSortMode.nameAsc,
+                              );
+                            } else if (value == 'name_desc') {
+                              _tabunganController.updateSortMode(
+                                TabunganSortMode.nameDesc,
+                              );
+                            }
                           },
-                          borderRadius: BorderRadius.circular(20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          color: Colors.white,
+                          offset: const Offset(0, 42),
+                          itemBuilder:
+                              (context) => [
+                                const PopupMenuItem(
+                                  value: 'name_asc',
+                                  child: Text('A - Z'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'name_desc',
+                                  child: Text('Z - A'),
+                                ),
+                              ],
                           child: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             child: Row(
@@ -168,11 +191,34 @@ class HomeView extends StatelessWidget {
                       ),
                       child: Material(
                         color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            // TODO: Sort/Order
+                        child: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'nominal_asc') {
+                              _tabunganController.updateSortMode(
+                                TabunganSortMode.nominalAsc,
+                              );
+                            } else if (value == 'nominal_desc') {
+                              _tabunganController.updateSortMode(
+                                TabunganSortMode.nominalDesc,
+                              );
+                            }
                           },
-                          borderRadius: BorderRadius.circular(20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          color: Colors.white,
+                          offset: const Offset(0, 42),
+                          itemBuilder:
+                              (context) => [
+                                const PopupMenuItem(
+                                  value: 'nominal_asc',
+                                  child: Text('Terendah → Tertinggi'),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'nominal_desc',
+                                  child: Text('Tertinggi → Terendah'),
+                                ),
+                              ],
                           child: const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 16),
                             child: Row(
@@ -212,7 +258,11 @@ class HomeView extends StatelessWidget {
                   );
                 }
 
-                if (_tabunganController.tabunganList.isEmpty) {
+                final activeTabunganList = _tabunganController.tabunganList
+                    .where((tabungan) => !tabungan.isTargetTercapai)
+                    .toList();
+
+                if (activeTabunganList.isEmpty) {
                   return SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
                     child: Container(
@@ -223,15 +273,6 @@ class HomeView extends StatelessWidget {
                           children: [
                             Container(
                               padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFF009F61).withOpacity(0.1),
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.account_balance_wallet_outlined,
-                                size: 80,
-                                color: Color(0xFF009F61),
-                              ),
                             ),
                             const SizedBox(height: 24),
                             const Text(
@@ -262,9 +303,9 @@ class HomeView extends StatelessWidget {
                 return ListView.builder(
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  itemCount: _tabunganController.tabunganList.length,
+                  itemCount: activeTabunganList.length,
                   itemBuilder: (context, index) {
-                    final tabungan = _tabunganController.tabunganList[index];
+                    final tabungan = activeTabunganList[index];
 
                     // PROGRESS DINAMIS - dari database
                     final progress = tabungan.progress;
@@ -316,32 +357,30 @@ class HomeView extends StatelessWidget {
                                         Icons.more_vert,
                                         color: Colors.grey[400],
                                         size: 20,
-                                      ),
+  ),
+  color: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       itemBuilder:
                                           (context) => [
-                                            // HAPUS MENU EDIT
-                                            const PopupMenuItem(
-                                              value: 'delete',
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons.delete_outline,
-                                                    size: 20,
-                                                    color: Colors.red,
-                                                  ),
-                                                  SizedBox(width: 12),
-                                                  Text(
-                                                    'Hapus',
-                                                    style: TextStyle(
-                                                      color: Colors.red,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
+                                         const PopupMenuItem(
+  value: 'delete',
+  child: Row(
+    children: [
+      Icon(
+        Icons.delete_outline,
+        size: 20,
+        color: Colors.red,
+      ),
+      SizedBox(width: 12),
+      Text(
+        'Hapus',
+        style: TextStyle(color: Colors.red),
+      ),
+    ],
+  ),
+),
                                           ],
                                       onSelected: (value) {
                                         if (value == 'delete') {
@@ -583,58 +622,48 @@ class HomeView extends StatelessWidget {
   }
 
   void _showDeleteConfirmation(BuildContext context, String id, String nama) {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.red.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.warning_amber_rounded,
-                    color: Colors.red,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text('Hapus Tabungan'),
-              ],
-            ),
-            content: Text(
-              'Apakah Anda yakin ingin menghapus "$nama"? Tindakan ini tidak dapat dibatalkan.',
-              style: TextStyle(color: Colors.grey[700]),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Batal', style: TextStyle(color: Colors.grey[600])),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  _tabunganController.deleteTabungan(id);
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('Hapus'),
-              ),
-            ],
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: Colors.white, // <-- TAMBAHKAN INI
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
           ),
-    );
-  }
+          const SizedBox(width: 12),
+          const Text('Hapus Tabungan'),
+        ],
+      ),
+      content: Text(
+        'Apakah Anda yakin ingin menghapus "$nama"? Tindakan ini tidak dapat dibatalkan.',
+        style: TextStyle(color: Colors.grey[700]),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Batal', style: TextStyle(color: Colors.grey[600])),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            _tabunganController.deleteTabungan(id);
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            foregroundColor: Colors.white,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(8),
+            ),
+          ),
+          child: const Text('Hapus'),
+        ),
+      ],
+    ),
+  );
+}
 
   String _formatCurrency(tabungan) {
     final symbol = _getCurrencySymbol(tabungan.mataUang);

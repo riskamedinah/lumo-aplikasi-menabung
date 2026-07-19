@@ -17,7 +17,6 @@ class TambahSetoranBottomSheet extends StatefulWidget {
 class _TambahSetoranBottomSheetState extends State<TambahSetoranBottomSheet> {
   final TabunganController _controller = Get.find<TabunganController>();
   final TextEditingController _jumlahController = TextEditingController();
-  final TextEditingController _deskripsiController = TextEditingController();
   final NumberFormat _numberFormat = NumberFormat("#,##0", "id_ID");
 
   bool _isLoading = false;
@@ -72,14 +71,11 @@ class _TambahSetoranBottomSheetState extends State<TambahSetoranBottomSheet> {
       // Hitung total baru
       final totalBaru = widget.tabungan.totalTerkumpul + jumlah;
 
-      // Update di database
+      // Update di database (tanpa deskripsi)
       await _controller.tambahSetoran(
         widget.tabungan.id,
         jumlah,
         totalBaru,
-        _deskripsiController.text.isNotEmpty
-            ? _deskripsiController.text
-            : 'Setoran',
       );
 
       // Tutup bottom sheet
@@ -87,7 +83,7 @@ class _TambahSetoranBottomSheetState extends State<TambahSetoranBottomSheet> {
 
       // Navigasi ke HomeView setelah delay singkat
       await Future.delayed(Duration(milliseconds: 1500));
-      Get.until((route) => route.isFirst); // Kembali ke home
+      Get.until((route) => route.isFirst);
     } catch (e) {
       Get.snackbar(
         'Error',
@@ -108,7 +104,6 @@ class _TambahSetoranBottomSheetState extends State<TambahSetoranBottomSheet> {
     final progressPercentage = (progress * 100).toInt();
 
     return SingleChildScrollView(
-      // TAMBAHKAN INI - FIX OVERFLOW
       child: Container(
         padding: EdgeInsets.only(
           top: 24,
@@ -229,7 +224,7 @@ class _TambahSetoranBottomSheetState extends State<TambahSetoranBottomSheet> {
 
             const SizedBox(height: 24),
 
-            // Form Setoran
+            // Form Setoran - HANYA JUMLAH (deskripsi dihapus)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -286,46 +281,6 @@ class _TambahSetoranBottomSheetState extends State<TambahSetoranBottomSheet> {
                       );
                     }
                   },
-                ),
-
-                const SizedBox(height: 16),
-
-                const Text(
-                  'Deskripsi (Opsional)',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _deskripsiController,
-                  decoration: InputDecoration(
-                    hintText: 'Contoh: Setoran bulan Januari',
-                    filled: true,
-                    fillColor: Colors.grey[50],
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: BorderSide(color: Colors.grey[300]!),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      borderSide: const BorderSide(
-                        color: Color(0xFF009F61),
-                        width: 2,
-                      ),
-                    ),
-                  ),
-                  maxLines: 2,
                 ),
               ],
             ),

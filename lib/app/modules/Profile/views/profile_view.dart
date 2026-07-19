@@ -41,13 +41,7 @@ class ProfileView extends StatelessWidget {
                               _buildMenuItem(
                                 icon: 'assets/images/lock.svg',
                                 title: 'Ubah Password',
-                                onTap: () {},
-                              ),
-                              const SizedBox(height: 14),
-                              _buildMenuItem(
-                                icon: 'assets/images/backup.svg',
-                                title: 'Backup dan Restore',
-                                onTap: () {},
+                                onTap: _showChangePasswordDialog,
                               ),
                               const SizedBox(height: 14),
                               _buildMenuItem(
@@ -150,6 +144,353 @@ class ProfileView extends StatelessWidget {
             ),
             const Icon(Icons.chevron_right, color: Colors.white, size: 24),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showChangePasswordDialog() {
+    final currentPasswordController = TextEditingController();
+    final isCurrentPasswordHidden = true.obs;
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Verifikasi Password',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Masukkan password lama Anda untuk melanjutkan ke form ubah password baru.',
+                style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+              ),
+              const SizedBox(height: 16),
+              Obx(
+                () => TextField(
+                  controller: currentPasswordController,
+                  obscureText: isCurrentPasswordHidden.value,
+                  decoration: InputDecoration(
+                    labelText: 'Password Lama',
+                    filled: true,
+                    fillColor: Colors.white,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade500, width: 2),
+                    ),
+                    suffixIcon: IconButton(
+                      onPressed:
+                          () => isCurrentPasswordHidden.value =
+                              !isCurrentPasswordHidden.value,
+                      icon: Icon(
+                        isCurrentPasswordHidden.value
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        backgroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        'Batal',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final currentPassword = currentPasswordController.text.trim();
+                        if (currentPassword.isEmpty) {
+                          Get.snackbar(
+                            'Error',
+                            'Password lama harus diisi',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+
+                        final verified = await controller.verifyCurrentPassword(
+                          currentPassword,
+                        );
+                        if (verified) {
+                          Get.back();
+                          _showNewPasswordDialog();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: const Color(0xFF009F61),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Obx(
+                        () => controller.isChangingPassword.value
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Lanjut',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showNewPasswordDialog() {
+    final newPasswordController = TextEditingController();
+    final confirmPasswordController = TextEditingController();
+    final isPasswordHidden = true.obs;
+    final isConfirmPasswordHidden = true.obs;
+
+    Get.dialog(
+      Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Ubah Password',
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Obx(
+                () => TextField(
+                  controller: newPasswordController,
+                  obscureText: isPasswordHidden.value,
+                  decoration: InputDecoration(
+                    labelText: 'Password Baru',
+                    filled: true,
+                    fillColor: Colors.white,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade500, width: 2),
+                    ),
+                    suffixIcon: IconButton(
+                      onPressed:
+                          () => isPasswordHidden.value = !isPasswordHidden.value,
+                      icon: Icon(
+                        isPasswordHidden.value
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Obx(
+                () => TextField(
+                  controller: confirmPasswordController,
+                  obscureText: isConfirmPasswordHidden.value,
+                  decoration: InputDecoration(
+                    labelText: 'Konfirmasi Password Baru',
+                    filled: true,
+                    fillColor: Colors.white,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade400),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(color: Colors.grey.shade500, width: 2),
+                    ),
+                    suffixIcon: IconButton(
+                      onPressed:
+                          () => isConfirmPasswordHidden.value =
+                              !isConfirmPasswordHidden.value,
+                      icon: Icon(
+                        isConfirmPasswordHidden.value
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Get.back(),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(color: Colors.grey.shade300),
+                        ),
+                        backgroundColor: Colors.white,
+                      ),
+                      child: Text(
+                        'Batal',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        final newPassword = newPasswordController.text.trim();
+                        final confirmPassword = confirmPasswordController.text.trim();
+
+                        if (newPassword.isEmpty || confirmPassword.isEmpty) {
+                          Get.snackbar(
+                            'Error',
+                            'Password baru dan konfirmasi harus diisi',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+
+                        if (newPassword.length < 6) {
+                          Get.snackbar(
+                            'Error',
+                            'Password minimal 6 karakter',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+
+                        if (!RegExp(r'(?=.*[A-Za-z])(?=.*\d)').hasMatch(newPassword)) {
+                          Get.snackbar(
+                            'Error',
+                            'Password harus berisi huruf dan angka',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+
+                        if (newPassword != confirmPassword) {
+                          Get.snackbar(
+                            'Error',
+                            'Konfirmasi password tidak sesuai',
+                            snackPosition: SnackPosition.BOTTOM,
+                            backgroundColor: Colors.red,
+                            colorText: Colors.white,
+                          );
+                          return;
+                        }
+
+                        final success = await controller.changePassword(newPassword);
+                        if (success) {
+                          Get.back();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        backgroundColor: const Color(0xFF009F61),
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Obx(
+                        () => controller.isChangingPassword.value
+                            ? const SizedBox(
+                              width: 18,
+                              height: 18,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                            : const Text(
+                              'Simpan',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
